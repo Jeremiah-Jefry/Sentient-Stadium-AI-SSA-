@@ -6,6 +6,7 @@
 
 "use client";
 
+import Link from "next/link";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { useAuth } from "@/hooks/use-auth";
 import { useRBAC } from "@/hooks/use-rbac";
@@ -74,6 +75,44 @@ function DashboardContent() {
               {profile?.email_verified ? "Yes" : "No"}
             </p>
           </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Link
+            href="/orchestration"
+            className="rounded-lg border border-indigo-500/30 bg-indigo-500/5 p-6 hover:border-indigo-500/50 transition-colors group"
+          >
+            <h2 className="text-lg font-semibold text-foreground group-hover:text-indigo-400 transition-colors">
+              Orchestration Engine
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              AI multi-agent orchestration, reasoning, and decision support.
+            </p>
+          </Link>
+
+          <Link
+            href="/orchestration/execute"
+            className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-6 hover:border-emerald-500/50 transition-colors group"
+          >
+            <h2 className="text-lg font-semibold text-foreground group-hover:text-emerald-400 transition-colors">
+              Execute Request
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Submit a request to the AI orchestration engine.
+            </p>
+          </Link>
+
+          <Link
+            href="/orchestration/agents"
+            className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-6 hover:border-purple-500/50 transition-colors group"
+          >
+            <h2 className="text-lg font-semibold text-foreground group-hover:text-purple-400 transition-colors">
+              Agent Status
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Monitor all AI agents and their health status.
+            </p>
+          </Link>
         </div>
 
         {rbac.isAdmin && (

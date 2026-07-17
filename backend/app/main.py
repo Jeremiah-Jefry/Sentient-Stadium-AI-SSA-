@@ -42,6 +42,14 @@ from app.features.navigation.api.error_handlers import (
     register_navigation_error_handlers,
 )
 from app.features.navigation.api.router import navigation_router
+from app.features.orchestration.api.error_handlers import (
+    register_orchestration_error_handlers,
+)
+from app.features.orchestration.api.router import orchestration_router
+from app.features.orchestration.api.websocket import orchestration_websocket
+from app.features.orchestration.consumers.orchestration_consumer import (
+    OrchestrationConsumer,
+)
 
 settings = get_settings()
 
@@ -83,7 +91,59 @@ async def lifespan(app: FastAPI):
     await nav_consumer.start()
     logger.info("Navigation consumer started")
 
+    # Start Orchestration consumer (event-driven triggers)
+    from app.features.orchestration.api.deps import (
+        _agent_registry,
+        _tool_registry,
+        _execution_planner,
+        _pipeline_executor,
+        _reasoning_engine,
+        _safety_engine,
+        _orchestrator_confidence,
+        _explanation_engine,
+        _result_aggregator,
+        _conflict_resolver,
+        _memory_manager,
+        _knowledge_retrieval,
+        _streaming_manager,
+        _metrics,
+    )
+    from app.features.orchestration.services.orchestration_service import (
+        OrchestrationService,
+    )
+
+    orch_service = OrchestrationService(
+        agent_registry=_agent_registry,
+        tool_registry=_tool_registry,
+        execution_planner=_execution_planner,
+        pipeline_executor=_pipeline_executor,
+        reasoning_engine=_reasoning_engine,
+        safety_engine=_safety_engine,
+        orchestrator_confidence=_orchestrator_confidence,
+        explanation_engine=_explanation_engine,
+        result_aggregator=_result_aggregator,
+        conflict_resolver=_conflict_resolver,
+        memory_manager=_memory_manager,
+        knowledge_retrieval=_knowledge_retrieval,
+        streaming_manager=_streaming_manager,
+        metrics=_metrics,
+    )
+    orch_consumer = OrchestrationConsumer(orch_service)
+    event_bus.subscribe(
+        subscriber_id=orch_consumer.SUBSCRIBER_ID,
+        callback=orch_consumer.handle_event,
+        categories={"crowd", "weather", "emergency", "medical",
+                     "security", "infrastructure", "incident"},
+    )
+    await orch_consumer.start()
+    logger.info("Orchestration consumer started")
+
     yield
+
+    # Shutdown Orchestration consumer
+    await orch_consumer.stop()
+    event_bus.unsubscribe(orch_consumer.SUBSCRIBER_ID)
+    logger.info("Orchestration consumer stopped")
 
     # Shutdown Navigation consumer
     await nav_consumer.stop()
@@ -133,11 +193,13 @@ def create_app() -> FastAPI:
     app.include_router(event_streaming_router)
     app.include_router(ai_intelligence_router)
     app.include_router(navigation_router)
+    app.include_router(orchestration_router)
 
     # WebSocket endpoints
     app.websocket("/ws/digital-twin")(digital_twin_websocket)
     app.websocket("/ws/events")(event_stream_websocket)
     app.websocket("/ws/intelligence")(intelligence_websocket)
+    app.websocket("/ws/orchestration")(orchestration_websocket)
 
     # Error handlers
     register_error_handlers(app)
@@ -145,6 +207,7 @@ def create_app() -> FastAPI:
     register_event_streaming_error_handlers(app)
     register_ai_intelligence_error_handlers(app)
     register_navigation_error_handlers(app)
+    register_orchestration_error_handlers(app)
 
     @app.get("/health", tags=["Health"])
     async def health_check():

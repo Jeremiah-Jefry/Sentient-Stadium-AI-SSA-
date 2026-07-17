@@ -76,6 +76,15 @@ class Settings(BaseSettings):
     NAV_MAX_CONCURRENT_SESSIONS: int = 10000
     NAV_WEIGHT_ENGINE_UPDATE_INTERVAL: float = 5.0
 
+    # Orchestration Engine
+    ORCH_MAX_CONCURRENT_REQUESTS: int = 10000
+    ORCH_DEFAULT_TIMEOUT_SECONDS: float = 30.0
+    ORCH_SAFETY_VALIDATION_ENABLED: bool = True
+    ORCH_INJECTION_DETECTION_ENABLED: bool = True
+    ORCH_MEMORY_TTL_SECONDS: int = 3600
+    ORCH_STREAMING_CLEANUP_SECONDS: int = 300
+    ORCH_AGENT_HEALTH_CHECK_INTERVAL: int = 60
+
     @field_validator("APP_SECRET_KEY", "JWT_SECRET_KEY")
     @classmethod
     def reject_default_secrets(cls, v: str) -> str:
