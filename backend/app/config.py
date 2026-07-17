@@ -49,6 +49,17 @@ class Settings(BaseSettings):
     PASSWORD_MIN_LENGTH: int = 8
     PASSWORD_MAX_LENGTH: int = 128
 
+    # Event Streaming
+    EVENT_STREAM_MAX_EVENTS_PER_SEC: int = 100000
+    EVENT_STREAM_PIPELINE_MAX_RETRIES: int = 3
+    EVENT_STREAM_DLQ_ENABLED: bool = True
+    EVENT_STREAM_FUSION_WINDOW_MS: int = 5000
+    EVENT_STREAM_CACHE_L1_SIZE: int = 1000
+    EVENT_STREAM_CACHE_L1_TTL: int = 60
+    EVENT_STREAM_CACHE_L2_TTL: int = 300
+    EVENT_STREAM_REPLAY_BATCH_SIZE: int = 500
+    EVENT_STREAM_SNAPSHOT_INTERVAL_SEC: int = 60
+
     @field_validator("APP_SECRET_KEY", "JWT_SECRET_KEY")
     @classmethod
     def reject_default_secrets(cls, v: str) -> str:

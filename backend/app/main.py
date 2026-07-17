@@ -22,6 +22,12 @@ from app.features.digital_twin.api.error_handlers import (
 )
 from app.features.digital_twin.api.router import digital_twin_router
 from app.features.digital_twin.api.websocket import digital_twin_websocket
+from app.features.event_streaming.api.deps import get_event_bus
+from app.features.event_streaming.api.error_handlers import (
+    register_event_streaming_error_handlers,
+)
+from app.features.event_streaming.api.router import event_streaming_router
+from app.features.event_streaming.api.websocket import event_stream_websocket
 
 settings = get_settings()
 
@@ -40,8 +46,15 @@ async def lifespan(app: FastAPI):
     # Initialize Firebase Admin SDK
     FirebaseService.initialize()
 
+    # Start the event streaming bus
+    event_bus = get_event_bus()
+    await event_bus.start()
+    logger.info("Event streaming bus started")
+
     yield
 
+    # Shutdown the event streaming bus
+    await event_bus.stop()
     logger.info("Shutting down StadiumMind OS")
 
 
@@ -76,13 +89,16 @@ def create_app() -> FastAPI:
     # Routes
     app.include_router(iam_router)
     app.include_router(digital_twin_router)
+    app.include_router(event_streaming_router)
 
-    # WebSocket endpoint
+    # WebSocket endpoints
     app.websocket("/ws/digital-twin")(digital_twin_websocket)
+    app.websocket("/ws/events")(event_stream_websocket)
 
     # Error handlers
     register_error_handlers(app)
     register_digital_twin_error_handlers(app)
+    register_event_streaming_error_handlers(app)
 
     @app.get("/health", tags=["Health"])
     async def health_check():

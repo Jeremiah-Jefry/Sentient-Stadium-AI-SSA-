@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "stadiummind-iam"
 version = "1.0.0"
-description = "StadiumMind OS - Identity & Access Management Module"
+description = "StadiumMind OS - Enterprise Multi-Agent AI Platform for FIFA World Cup 2026"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.115.0,<1.0.0",
@@ -53,4 +53,4 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["app/features/auth/tests", "app/features/digital_twin/tests"]
+testpaths = ["app/features/auth/tests", "app/features/digital_twin/tests", "app/features/event_streaming/tests"]
