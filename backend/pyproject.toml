@@ -22,6 +22,9 @@ dependencies = [
     "httpx>=0.28.0,<1.0.0",
     "structlog>=24.4.0,<25.0.0",
     "bleach>=6.2.0,<7.0.0",
+    "geoalchemy2>=0.15.0,<1.0.0",
+    "shapely>=2.0.0,<3.0.0",
+    "websockets>=13.0,<15.0",
 ]
 
 [project.optional-dependencies]
@@ -50,4 +53,4 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["app/features/auth/tests"]
+testpaths = ["app/features/auth/tests", "app/features/digital_twin/tests"]

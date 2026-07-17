@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
@@ -17,6 +17,11 @@ from app.features.auth.api.middleware import (
 )
 from app.features.auth.api.router import iam_router
 from app.features.auth.services.firebase_service import FirebaseService
+from app.features.digital_twin.api.error_handlers import (
+    register_digital_twin_error_handlers,
+)
+from app.features.digital_twin.api.router import digital_twin_router
+from app.features.digital_twin.api.websocket import digital_twin_websocket
 
 settings = get_settings()
 
@@ -30,22 +35,22 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: initialize external services on startup."""
-    logger.info("Starting StadiumMind IAM service (env=%s)", settings.APP_ENV)
+    logger.info("Starting StadiumMind OS (env=%s)", settings.APP_ENV)
 
     # Initialize Firebase Admin SDK
     FirebaseService.initialize()
 
     yield
 
-    logger.info("Shutting down StadiumMind IAM service")
+    logger.info("Shutting down StadiumMind OS")
 
 
 def create_app() -> FastAPI:
-    """Application factory for the StadiumMind IAM service."""
+    """Application factory for StadiumMind OS."""
     app = FastAPI(
-        title="StadiumMind OS - IAM Service",
-        description="Identity & Access Management for FIFA World Cup 2026 volunteers",
-        version="1.0.0",
+        title="StadiumMind OS",
+        description="Enterprise Multi-Agent AI Platform for FIFA World Cup 2026",
+        version="2.0.0",
         docs_url="/docs" if settings.APP_DEBUG else None,
         redoc_url="/redoc" if settings.APP_DEBUG else None,
         openapi_url="/openapi.json" if settings.APP_DEBUG else None,
@@ -70,13 +75,18 @@ def create_app() -> FastAPI:
 
     # Routes
     app.include_router(iam_router)
+    app.include_router(digital_twin_router)
+
+    # WebSocket endpoint
+    app.websocket("/ws/digital-twin")(digital_twin_websocket)
 
     # Error handlers
     register_error_handlers(app)
+    register_digital_twin_error_handlers(app)
 
     @app.get("/health", tags=["Health"])
     async def health_check():
-        return {"status": "healthy", "service": "stadiummind-iam"}
+        return {"status": "healthy", "service": "stadiummind-os", "version": "2.0.0"}
 
     return app
 
