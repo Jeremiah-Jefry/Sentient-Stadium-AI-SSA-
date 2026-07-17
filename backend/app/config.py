@@ -60,6 +60,13 @@ class Settings(BaseSettings):
     EVENT_STREAM_REPLAY_BATCH_SIZE: int = 500
     EVENT_STREAM_SNAPSHOT_INTERVAL_SEC: int = 60
 
+    # AI Intelligence Engine
+    AI_PREDICTION_WINDOW_SECONDS: int = 300
+    AI_RISK_UPDATE_INTERVAL_SECONDS: int = 30
+    AI_CONFIDENCE_THRESHOLD: float = 0.5
+    AI_MAX_CONCURRENT_PIPELINES: int = 100
+    AI_MODEL_CACHE_TTL_SECONDS: int = 3600
+
     @field_validator("APP_SECRET_KEY", "JWT_SECRET_KEY")
     @classmethod
     def reject_default_secrets(cls, v: str) -> str:

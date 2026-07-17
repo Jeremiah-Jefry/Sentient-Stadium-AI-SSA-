@@ -53,4 +53,4 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["app/features/auth/tests", "app/features/digital_twin/tests", "app/features/event_streaming/tests"]
+testpaths = ["app/features/auth/tests", "app/features/digital_twin/tests", "app/features/event_streaming/tests", "app/features/ai_intelligence/tests"]

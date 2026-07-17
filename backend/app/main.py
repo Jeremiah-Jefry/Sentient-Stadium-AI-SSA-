@@ -9,6 +9,15 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.features.ai_intelligence.api.deps import get_intelligence_service
+from app.features.ai_intelligence.api.error_handlers import (
+    register_ai_intelligence_error_handlers,
+)
+from app.features.ai_intelligence.api.router import ai_intelligence_router
+from app.features.ai_intelligence.api.websocket import intelligence_websocket
+from app.features.ai_intelligence.consumers.intelligence_consumer import (
+    IntelligenceConsumer,
+)
 from app.features.auth.api.error_handlers import register_error_handlers
 from app.features.auth.api.middleware import (
     RateLimitMiddleware,
@@ -51,7 +60,18 @@ async def lifespan(app: FastAPI):
     await event_bus.start()
     logger.info("Event streaming bus started")
 
+    # Start AI Intelligence consumer
+    intelligence_service = get_intelligence_service()
+    intelligence_consumer = IntelligenceConsumer(intelligence_service)
+    event_bus.register_consumer(intelligence_consumer)
+    await intelligence_consumer.start()
+    logger.info("AI Intelligence consumer started")
+
     yield
+
+    # Shutdown AI Intelligence consumer
+    await intelligence_consumer.stop()
+    logger.info("AI Intelligence consumer stopped")
 
     # Shutdown the event streaming bus
     await event_bus.stop()
@@ -90,15 +110,18 @@ def create_app() -> FastAPI:
     app.include_router(iam_router)
     app.include_router(digital_twin_router)
     app.include_router(event_streaming_router)
+    app.include_router(ai_intelligence_router)
 
     # WebSocket endpoints
     app.websocket("/ws/digital-twin")(digital_twin_websocket)
     app.websocket("/ws/events")(event_stream_websocket)
+    app.websocket("/ws/intelligence")(intelligence_websocket)
 
     # Error handlers
     register_error_handlers(app)
     register_digital_twin_error_handlers(app)
     register_event_streaming_error_handlers(app)
+    register_ai_intelligence_error_handlers(app)
 
     @app.get("/health", tags=["Health"])
     async def health_check():
