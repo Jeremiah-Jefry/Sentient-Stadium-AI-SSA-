@@ -37,6 +37,11 @@ from app.features.event_streaming.api.error_handlers import (
 )
 from app.features.event_streaming.api.router import event_streaming_router
 from app.features.event_streaming.api.websocket import event_stream_websocket
+from app.features.navigation.api.deps import get_navigation_consumer, get_navigation_router
+from app.features.navigation.api.error_handlers import (
+    register_navigation_error_handlers,
+)
+from app.features.navigation.api.router import navigation_router
 
 settings = get_settings()
 
@@ -67,7 +72,23 @@ async def lifespan(app: FastAPI):
     await intelligence_consumer.start()
     logger.info("AI Intelligence consumer started")
 
+    # Start Navigation consumer
+    nav_consumer = get_navigation_consumer()
+    event_bus.subscribe(
+        subscriber_id=nav_consumer.SUBSCRIBER_ID,
+        callback=nav_consumer.handle_event,
+        categories={"crowd", "weather", "emergency", "medical",
+                     "security", "infrastructure"},
+    )
+    await nav_consumer.start()
+    logger.info("Navigation consumer started")
+
     yield
+
+    # Shutdown Navigation consumer
+    await nav_consumer.stop()
+    event_bus.unsubscribe(nav_consumer.SUBSCRIBER_ID)
+    logger.info("Navigation consumer stopped")
 
     # Shutdown AI Intelligence consumer
     await intelligence_consumer.stop()
@@ -111,6 +132,7 @@ def create_app() -> FastAPI:
     app.include_router(digital_twin_router)
     app.include_router(event_streaming_router)
     app.include_router(ai_intelligence_router)
+    app.include_router(navigation_router)
 
     # WebSocket endpoints
     app.websocket("/ws/digital-twin")(digital_twin_websocket)
@@ -122,6 +144,7 @@ def create_app() -> FastAPI:
     register_digital_twin_error_handlers(app)
     register_event_streaming_error_handlers(app)
     register_ai_intelligence_error_handlers(app)
+    register_navigation_error_handlers(app)
 
     @app.get("/health", tags=["Health"])
     async def health_check():

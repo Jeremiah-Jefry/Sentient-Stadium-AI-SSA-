@@ -67,6 +67,15 @@ class Settings(BaseSettings):
     AI_MAX_CONCURRENT_PIPELINES: int = 100
     AI_MODEL_CACHE_TTL_SECONDS: int = 3600
 
+    # Navigation Engine
+    NAV_GRAPH_CACHE_TTL_SECONDS: int = 60
+    NAV_ROUTE_CACHE_TTL_SECONDS: int = 300
+    NAV_MAX_ALTERNATIVES: int = 5
+    NAV_REPLAN_COOLDOWN_SECONDS: float = 10.0
+    NAV_SIMULATION_TIME_HORIZON: float = 300.0
+    NAV_MAX_CONCURRENT_SESSIONS: int = 10000
+    NAV_WEIGHT_ENGINE_UPDATE_INTERVAL: float = 5.0
+
     @field_validator("APP_SECRET_KEY", "JWT_SECRET_KEY")
     @classmethod
     def reject_default_secrets(cls, v: str) -> str:
